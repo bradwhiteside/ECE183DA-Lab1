@@ -24,24 +24,34 @@ class Agent:
     self.accelerometerStdDev = astddev # = 8 mg-rms
     self.magnemometer = mstddev
 
-  def state_update(self, u):
-    '''
-    Moving to the next step given the input u
+  def state_update(self, PWM_signal):
+      '''
+          Moving to the next step given the input u
+          return : s
+          '''
+      u = [0, 0]
+      k_l = 1
+      k_r = 1
 
-    return : s
-    '''
-    d = self.diameter
-    w = self.width
+      u[0] = k_l * PWM_signal[0]
+      u[1] = k_r * PWM_signal[1]
 
-    F = np.eye(3,3)
-    B = np.array([[d/4 * np.cos(self.theta), d/4 * np.cos(self.theta)],
-                 [d/4 * np.sin(self.theta), d/4 * np.sin(self.theta)],
-                 [self.d/(2*self.w),        -self.d/(2*self.w)]])
+      if u[0] < 50:
+          u[0] = 0
 
-    #Given MAXRPM in revs per min, convert to radians/s and scale input
-    self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255)
-    self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255)
-    return F @ self.S + B @ self.u * self.delta_t
+      if u[1] < 50:
+          u[1] = 0
+
+      # Given MAXRPM in revs per min, convert to radians/s and scale input
+      self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 255) + np.random.normal(0, self.PWM_std[0])
+      self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 255) + np.random.normal(0, self.PWM_std[1])
+
+      F = np.eye(3, 3)
+      B = np.array([[self.diameter / 4 * np.cos(self.theta), self.diameter / 4 * np.cos(self.theta)],
+                    [self.diameter / 4 * np.sin(self.theta), self.diameter / 4 * np.sin(self.theta)],
+                    [self.diameter / (2 * self.width), -self.diameter / (2 * self.width)]])
+
+      return F @ self.S + B @ self.u * self.delta_t
 
 
 
@@ -131,7 +141,7 @@ between 0 and 255. These will represent the 2 inputs
 """
 def loop(P, robot):
     xOffset = P["startingX"] - P["d"]
-    yOffset = P["startingY"] - P["l"]
+    yOffset = P["startingY"] - P["w"]
 
     pygame.init()
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
@@ -151,7 +161,8 @@ def loop(P, robot):
             robot.state_update(u)
 
             #draw
-            surf = pygame.Surface((P["d"], P["l"])).convert_alpha()
+            surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
+            surf.fill((0, 128, 255))
             rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
             screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
             pygame.display.update()
