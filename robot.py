@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import math
 import csv
@@ -21,28 +22,28 @@ class Agent:
     self.lidarStdDev = lstddev # = 3%
     self.accelerometerStdDev = astddev # = 8 mg-rms
     self.magnemometer = mstddev
-    
+
   def state_update(self, u):
     '''
     Moving to the next step given the input u
-    
+
     return : s
     '''
     d = self.diameter
     w = self.width
-    
+
     F = np.eye(3,3)
-    B = np.array([[d/4 * np.cos(self.theta), d/4 * np.cos(self.theta)], 
+    B = np.array([[d/4 * np.cos(self.theta), d/4 * np.cos(self.theta)],
                  [d/4 * np.sin(self.theta), d/4 * np.sin(self.theta)],
                  [self.d/(2*self.w),        -self.d/(2*self.w)]])
-    
-    #Given MAXRPM in revs per min, convert to radians/s and scale input 
+
+    #Given MAXRPM in revs per min, convert to radians/s and scale input
     self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255)
     self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255)
     return F @ self.S + B @ self.u * self.delta_t
-                 
-    
-    
+
+
+
   
   def get_lidar(self):
     x_pos = self.S[0]
@@ -51,7 +52,7 @@ class Agent:
     theta_r = self.S[2] - math.pi/2
     length = self.room_length
     width = self.room_width
-    
+
     front_point = [-1,-1]
     right_point = [-1,-1]
 
@@ -65,14 +66,14 @@ class Agent:
                 [width, math.tan(theta_f) * (width - x_pos) + y_pos],
                 [(-1 * y_pos) / math.tan(theta_f) + x_pos, 0],
                 [(length - y_pos)/math.tan(theta_f) + x_pos, length]]
-    
+
     # front sensor find intersection
     for coord in front:
       if (coord[0] >= 0 and coord[0] <= width and
           coord[1] >= 0 and coord[1] <= length and
           ((math.sin(theta_f) * (coord[0] - x_pos)) + (math.cos(theta_f) * (coord[1] - y_pos))) >= 0):
         front_point = coord
-        
+
     # right sensor find coords
     if math.sin(theta_r) == 0:
         right = [[0, y_pos], [width, y_pos]]
@@ -83,7 +84,7 @@ class Agent:
                 [width, math.tan(theta_r) * (width - x_pos) + y_pos],
                 [(-1 * y_pos) / math.tan(theta_r) + x_pos, 0],
                 [(length - y_pos)/math.tan(theta_r) + x_pos, length]]
-    
+
     # right sensor find intersection
     for coord in right:
       if (coord[0] >= 0 and coord[0] <= width and
@@ -96,16 +97,16 @@ class Agent:
       raise ValueError("lidar: intersection not found!!! \n" + str(front_point) + "\n" + str(right_point))
     front_lidar = math.sqrt((x_pos - front_point[0])**2 + (y_pos - front_point[1])**2)
     right_lidar = math.sqrt((x_pos - right_point[0])**2 + (y_pos - right_point[1])**2)
-    
+
     return [front_lidar, right_lidar]
   
-  def get_IMU_velocity():
+  def get_IMU_velocity(self):
     omega = ((self.wl - self.wr)/self.width)*(self.diameter/2)
     return omega + np.random.normal(0, self.accelerometerStdDev)
-      
-  def get_IMU_position():
-    return (cos(self.S[2]) + np.random.normal(0, self.magnetometerStdDev), \
-            sin(self.S[2]) + np.random.normal(0, self.magnetometerStdDev) )
+
+  def get_IMU_position(self):
+    return (math.cos(self.S[2]) + np.random.normal(0, self.magnetometerStdDev), \
+            math.sin(self.S[2]) + np.random.normal(0, self.magnetometerStdDev) )
   
   def get_observation(self, wall1, wall2):
     #do the sensor output readings here
@@ -113,15 +114,14 @@ class Agent:
     velocity = self.get_IMU_velocity()
     pos = self.get_IMU_position()
     return L, velocity, pos
-    
-    
-    
+
+
+
   
 def get_input(PWM_std):
-  i_l = np.ones(100)
-  i_r = np.ones(100)
-     
-	return u
+    i_l = np.ones(100)
+    i_r = np.ones(100)
+
   
 """
 Main Loop for the simulation.
@@ -129,29 +129,31 @@ inputFile will be a csv file seperated by spaces where each line will have two i
 between 0 and 255. These will represent the 2 inputs
 """
 def loop(screen, robot):
-  with open("./controls.txt") as csvFile:
+  with open("controls.txt") as csvFile:
     csvReader = csv.reader(csvFile, delimiter=' ')
-    
+
     while True:
-    	#detect quit
-    	pygame.display.update()
-    	for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-      
-      #read input
-    	u = next(csvReader)
-     	robot.state_update(u)
-      
-  
+        #detect quit
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+        #read input
+        u = next(csvReader)
+        robot.state_update(u)
+
 def main():
-  pygame.init()
-  with open("./parameters.txt") as parametersFile:
-    screen = pygame.display.set_mode((screenWidth, screenHeight))
-		pygame.draw.rect(screen, (0,128,255), pygame.Rect(startingX, startingY, d, l)
-  	Agent robot = Agent()
-    loop(robot)
+    pygame.init()
+    screen = pygame.display.set_mode((500, 500))
+    pygame.draw.rect(screen, (0,128,255), pygame.Rect(250, 250, 60, 60))
+    while True:
+        #detect quit
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
 
 if __name__ == "__main__":
   main()
