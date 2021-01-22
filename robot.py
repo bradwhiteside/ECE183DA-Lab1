@@ -5,13 +5,14 @@ import csv
 import yaml
 import pygame
 from pygame.locals import *
+import time
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
 
 class Agent:
   def __init__(self, init_state = [0,0,0], w =90, d=50, rw=10000, rl=10000, maxrpm = 130, lstddev = 0.03, astddev = 8, mstddev =1):  
-    self.S = init_state
+    self.S = np.array(init_state)
     self.width = w
     self.diameter = d
     self.room_width = rw		# x-direction
@@ -23,7 +24,7 @@ class Agent:
     self.lidarStdDev = lstddev # = 3%
     self.accelerometerStdDev = astddev # = 8 mg-rms
     self.magnemometer = mstddev
-    self.PWM_std = [0.01, 0.01]
+    self.PWM_std = [0, 0]
 
   def state_update(self, PWM_signal):
     '''
@@ -47,13 +48,20 @@ class Agent:
     self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 255) + np.random.normal(0, self.PWM_std[0])
     self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 255) + np.random.normal(0, self.PWM_std[1])
 
-    F = np.eye(3, 3)
+
     B = np.array([[self.diameter / 4 * np.cos(self.S[2]), self.diameter / 4 * np.cos(self.S[2])],
                   [self.diameter / 4 * np.sin(self.S[2]), self.diameter / 4 * np.sin(self.S[2])],
                   [self.diameter / (2 * self.width), -self.diameter / (2 * self.width)]])
 
     u = np.vstack((self.wl, self.wr))
-    return F @ self.S + B @ u * self.delta_t
+    
+    S = self.S + (B @ u) * self.delta_t
+    self.S =+ S[:,1]
+    print(self.S)
+ 
+  
+   
+    return self.S
 
     def get_lidar(self):
         x_pos = self.S[0]
@@ -125,10 +133,6 @@ class Agent:
     pos = self.get_IMU_position()
     return L, velocity, pos
   
-def get_input(PWM_std):
-    i_l = np.ones(100)
-    i_r = np.ones(100)
-
   
 """
 Main Loop for the simulation.
@@ -154,14 +158,15 @@ def loop(P, robot):
 
             #read input
             u = next(csvReader)
-            print(u)
             robot.state_update(u)
-            print(robot.S)
+            time.sleep(0.1)
+          
 
             #draw
             surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
             surf.fill((0, 128, 255))
             rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
+            screen.fill((0,0,0))
             screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
             pygame.display.update()
 
