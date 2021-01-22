@@ -25,35 +25,35 @@ class Agent:
     self.magnemometer = mstddev
     self.PWM_std = [0.01, 0.01]
 
-    def state_update(self, PWM_signal):
-        '''
-        Moving to the next step given the input u
-        return : s
-        '''
-        u = [0, 0]
-        k_l = 1
-        k_r = 1
+  def state_update(self, PWM_signal):
+    '''
+    Moving to the next step given the input u
+    return : s
+    '''
+    u = [0, 0]
+    k_l = 1
+    k_r = 1
 
-        u[0] = k_l * PWM_signal[0]
-        u[1] = k_r * PWM_signal[1]
+    u[0] = k_l * int(PWM_signal[0])
+    u[1] = k_r * int(PWM_signal[1])
 
-        if u[0] < 50:
-            u[0] = 0
+    if u[0] < 50:
+        u[0] = 0
 
-        if u[1] < 50:
-            u[1] = 0
+    if u[1] < 50:
+        u[1] = 0
 
-        # Given MAXRPM in revs per min, convert to radians/s and scale input
-        self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 255) + np.random.normal(0, self.PWM_std[0])
-        self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 255) + np.random.normal(0, self.PWM_std[1])
+    # Given MAXRPM in revs per min, convert to radians/s and scale input
+    self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 255) + np.random.normal(0, self.PWM_std[0])
+    self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 255) + np.random.normal(0, self.PWM_std[1])
 
-        F = np.eye(3, 3)
-        B = np.array([[self.diameter / 4 * np.cos(self.S[2]), self.diameter / 4 * np.cos(self.theta)],
-                      [self.diameter / 4 * np.sin(self.S[2]), self.diameter / 4 * np.sin(self.theta)],
-                      [self.diameter / (2 * self.width), -self.diameter / (2 * self.width)]])
+    F = np.eye(3, 3)
+    B = np.array([[self.diameter / 4 * np.cos(self.S[2]), self.diameter / 4 * np.cos(self.S[2])],
+                  [self.diameter / 4 * np.sin(self.S[2]), self.diameter / 4 * np.sin(self.S[2])],
+                  [self.diameter / (2 * self.width), -self.diameter / (2 * self.width)]])
 
-        u = np.vstack((self.wl, self.wr))
-        return F @ self.S + B @ u * self.delta_t
+    u = np.vstack((self.wl, self.wr))
+    return F @ self.S + B @ u * self.delta_t
 
     def get_lidar(self):
         x_pos = self.S[0]
@@ -124,9 +124,6 @@ class Agent:
     velocity = self.get_IMU_velocity()
     pos = self.get_IMU_position()
     return L, velocity, pos
-
-
-
   
 def get_input(PWM_std):
     i_l = np.ones(100)
@@ -157,7 +154,9 @@ def loop(P, robot):
 
             #read input
             u = next(csvReader)
+            print(u)
             robot.state_update(u)
+            print(robot.S)
 
             #draw
             surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
