@@ -30,22 +30,30 @@ class Agent:
 
     return : s
     '''
-    d = self.diameter
-    w = self.width
     u = [0,0]
+    k_l = 1
+    k_r = 1
+
+    u[0] = k_l * PWM_signal[0]
+    u[1] = k_r * PWM_signal[1]
+    
+    if u[0] < 50:
+        u[0] = 0
+
+    if u[1] < 50:
+        u[1] = 0
 
 
-    u[0] = k_l * (PWM_signal[0] + np.random.normal(0, self.PWM_std[0]))**2
-    u[1] = k_r *(PWM_signal[1] + np.random.normal(0, self.PWM_std[1]))**2
+   
 
     #Given MAXRPM in revs per min, convert to radians/s and scale input
-    self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255)
-    self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255)
+    self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255) + np.random.normal(0, self.PWM_std[0])
+    self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255) + np.random.normal(0, self.PWM_std[1])
 
     F = np.eye(3,3)
-    B = np.array([[d/4 * np.cos(self.theta), d/4 * np.cos(self.theta)],
-                 [d/4 * np.sin(self.theta), d/4 * np.sin(self.theta)],
-                 [self.d/(2*self.w),        -self.d/(2*self.w)]])
+    B = np.array([[self.diameter/4 * np.cos(self.theta), self.diameter/4 * np.cos(self.theta)],
+                 [self.diameter/4 * np.sin(self.theta), self.diameter/4 * np.sin(self.theta)],
+                 [self.diameter/(2*self.width),        -self.diameter/(2*self.width)]])
 
     return F @ self.S + B @ self.u * self.delta_t
 
