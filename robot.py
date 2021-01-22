@@ -73,59 +73,57 @@ class Agent:
 
    
   def get_lidar(self):
-        # x_pos = self.S[0]
-        # y_pos = self.S[1]
-        # theta_f = self.S[2]
-        # theta_r = self.S[2] - math.pi / 2
-        # length = self.room_length
-        # width = self.room_width
+        x_pos = self.S[0]
+        y_pos = self.S[1]
+        theta_f = self.S[2]
+        theta_r = self.S[2] - math.pi / 2
+        length = self.room_length
+        width = self.room_width
 
-        # front_point = [-1, -1]
-        # right_point = [-1, -1]
+        front_point = [-1, -1]
+        right_point = [-1, -1]
 
-        # # front sensor find coords
-        # if math.sin(theta_f) == 0:
-        #     front = [[0, y_pos], [width, y_pos]]
-        # elif math.cos(theta_f) == 0:
-        #     front = [[x_pos, 0], [x_pos, length]]
-        # else:
-        #     front = [[0, math.tan(theta_f) * (-1 * x_pos) + y_pos],
-        #              [width, math.tan(theta_f) * (width - x_pos) + y_pos],
-        #              [(-1 * y_pos) / math.tan(theta_f) + x_pos, 0],
-        #              [(length - y_pos) / math.tan(theta_f) + x_pos, length]]
+        # front sensor find coords
+        if math.sin(theta_f) == 0:
+            front = [[0, y_pos], [width, y_pos]]
+        elif math.cos(theta_f) == 0:
+            front = [[x_pos, 0], [x_pos, length]]
+        else:
+            front = [[0, math.tan(theta_f) * (-1 * x_pos) + y_pos],
+                     [width, math.tan(theta_f) * (width - x_pos) + y_pos],
+                     [(-1 * y_pos) / math.tan(theta_f) + x_pos, 0],
+                     [(length - y_pos) / math.tan(theta_f) + x_pos, length]]
 
-        # # front sensor find intersection
-        # for coord in front:
-        #     if (coord[0] >= 0 and coord[0] <= width and
-        #             coord[1] >= 0 and coord[1] <= length and
-        #             ((math.sin(theta_f) * (coord[0] - x_pos)) + (math.cos(theta_f) * (coord[1] - y_pos))) >= 0):
-        #         front_point = coord
+        # front sensor find intersection
+        for coord in front:
+            if (coord[0] >= 0 and coord[0] <= width and
+                    coord[1] >= 0 and coord[1] <= length and
+                    ((math.sin(theta_f) * (coord[0] - x_pos)) + (math.cos(theta_f) * (coord[1] - y_pos))) >= 0):
+                front_point = coord
 
-        # # right sensor find coords
-        # if math.sin(theta_r) == 0:
-        #     right = [[0, y_pos], [width, y_pos]]
-        # elif math.cos(theta_r) == 0:
-        #     right = [[x_pos, 0], [x_pos, length]]
-        # else:
-        #     right = [[0, math.tan(theta_r) * (-1 * x_pos) + y_pos],
-        #              [width, math.tan(theta_r) * (width - x_pos) + y_pos],
-        #              [(-1 * y_pos) / math.tan(theta_r) + x_pos, 0],
-        #              [(length - y_pos) / math.tan(theta_r) + x_pos, length]]
+        # right sensor find coords
+        if math.sin(theta_r) == 0:
+            right = [[0, y_pos], [width, y_pos]]
+        elif math.cos(theta_r) == 0:
+            right = [[x_pos, 0], [x_pos, length]]
+        else:
+            right = [[0, math.tan(theta_r) * (-1 * x_pos) + y_pos],
+                     [width, math.tan(theta_r) * (width - x_pos) + y_pos],
+                     [(-1 * y_pos) / math.tan(theta_r) + x_pos, 0],
+                     [(length - y_pos) / math.tan(theta_r) + x_pos, length]]
 
-        # # right sensor find intersection
-        # for coord in right:
-        #     if (coord[0] >= 0 and coord[0] <= width and
-        #             coord[1] >= 0 and coord[1] <= length and
-        #             ((math.sin(theta_r) * (coord[0] - x_pos)) + (math.cos(theta_r) * (coord[1] - y_pos))) >= 0):
-        #         right_point = coord
+        # right sensor find intersection
+        for coord in right:
+            if (coord[0] >= 0 and coord[0] <= width and
+                    coord[1] >= 0 and coord[1] <= length and
+                    ((math.sin(theta_r) * (coord[0] - x_pos)) + (math.cos(theta_r) * (coord[1] - y_pos))) >= 0):
+                right_point = coord
 
-        # # get distances of coords
-        # if front_point == [-1, -1] or right_point == [-1, -1]:
-        #     raise ValueError("lidar: intersection not found!!! \n" + str(front_point) + "\n" + str(right_point))
-        # front_lidar = math.sqrt((x_pos - front_point[0]) ** 2 + (y_pos - front_point[1]) ** 2)
-        # right_lidar = math.sqrt((x_pos - right_point[0]) ** 2 + (y_pos - right_point[1]) ** 2)
-        front_lidar =1
-        right_lidar = 1
+        # get distances of coords
+        if front_point == [-1, -1] or right_point == [-1, -1]:
+            raise ValueError("lidar: intersection not found!!! \n" + str(front_point) + "\n" + str(right_point))
+        front_lidar = math.sqrt((x_pos - front_point[0]) ** 2 + (y_pos - front_point[1]) ** 2)
+        right_lidar = math.sqrt((x_pos - right_point[0]) ** 2 + (y_pos - right_point[1]) ** 2)
         return [front_lidar, right_lidar]
 
 
@@ -158,45 +156,81 @@ def pi_2_pi(angle):
 
 def loop(P, robot):
     outputFile = open("output.csv", "w")
-    xOffset = P["startingX"] - P["d"]
-    yOffset = P["startingY"] - P["w"]
+    w = P["w"]
+    l = P["l"]
+    xOffset = P["startingX"] - (l // 2)
+    yOffset = P["startingY"] - (w // 2)
+
 
     pygame.init()
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
+    font = pygame.font.Font('freesansbold.ttf', 32)
 
     with open("controls.csv") as csvFile:
         csvReader = csv.reader(csvFile, delimiter=' ')
 
         while True:
-            #detect quit
+            # detect quit
             for event in pygame.event.get():
                 if event.type == QUIT:
+                    outputFile.close()
                     pygame.quit()
                     sys.exit()
 
-            #read input
+            # read input
             u = next(csvReader)
             robot.state_update(u)
             time.sleep(0.1)
 
             # get output
+   
             output = robot.get_observation()
-            outputText = str(round(output[0][0],3)) + " "
-            outputText = str(round(output[0][1],3)) + " "
-            outputText = str(round(output[1]   , 3)) + " "
-            outputText = str(round(output[2][0], 3)) + " "
-            outputText = str(round(output[2][1], 3))
+            outputText = str(round(output[0][0],3))[:-1]+ " "
+            outputText += str(round(output[0][1],3))[:-1]+ " "
+            outputText += str(round(output[1]   ,3))[:-1]+ " "
+            outputText += str(round(output[2][0],3))[:-1]+ " "
+            outputText += str(round(output[2][1],3))+ "\n" 
             outputFile.write(outputText)
-          
+            print(outputText)
+            
 
-            #draw
-            surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
+
+            # draw
+            screen.fill((0, 0, 0))
+            angle = robot.S[2] * 180 / np.pi
+            surf = pygame.Surface((l, w)).convert_alpha()
             surf.fill((0, 128, 255))
-            rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
-            screen.fill((0,0,0))
-            screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
+            x = xOffset + robot.S[0]
+            y = yOffset + robot.S[1]
+            blitRotate(screen, surf, (x, y), (l//2, w//2), -angle)
+
             pygame.display.update()
 
+
+# adjust coords so the surface rotates about its center
+# https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
+def blitRotate(surf, image, pos, originPos, angle):
+
+    # calcaulate the axis aligned bounding box of the rotated image
+    w, h       = image.get_size()
+    box        = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
+    box_rotate = [p.rotate(angle) for p in box]
+    min_box    = (min(box_rotate, key=lambda p: p[0])[0], min(box_rotate, key=lambda p: p[1])[1])
+    max_box    = (max(box_rotate, key=lambda p: p[0])[0], max(box_rotate, key=lambda p: p[1])[1])
+
+    # calculate the translation of the pivot
+    pivot        = pygame.math.Vector2(originPos[0], -originPos[1])
+    pivot_rotate = pivot.rotate(angle)
+    pivot_move   = pivot_rotate - pivot
+
+    # calculate the upper left origin of the rotated image
+    origin = (pos[0] - originPos[0] + min_box[0] - pivot_move[0], pos[1] - originPos[1] - max_box[1] + pivot_move[1])
+
+    # get a rotated image
+    rotated_image = pygame.transform.rotate(image, angle)
+
+    # rotate and blit the image
+    surf.blit(rotated_image, origin)
 def main():
     #load parameters
     P = {}
