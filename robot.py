@@ -118,9 +118,18 @@ class Agent:
 
 
   
-def get_input(PWM_std):
-    i_l = np.ones(100)
-    i_r = np.ones(100)
+def get_input(PWM_signal):
+    PWM_std =  np.array([0.01,0.01])
+    sinal_array_length = PWM_signal.shape[1]
+    np.random.normal(0, PWM_std[0], sinal_array_length)
+    k_l = 1
+    k_r = 1
+    
+    w_l = k_l * (PWM_signal [0,:] + np.random.normal(0, PWM_std[0], sinal_array_length))**2
+    w_r = k_r *(PWM_signal[1,:] + np.random.normal(0, PWM_std[1], sinal_array_length))**2
+    
+    u = np.vstack((w_l, w_r))
+    return u
 
   
 """
