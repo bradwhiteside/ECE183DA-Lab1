@@ -27,6 +27,7 @@ class Agent:
     self.PWM_std = [0, 0]
     self.Wheel_std = [0, 0]
 
+  #Getting RPM from the PWM signal
   def PWM_to_RPM(self, x):
     s = np.sign(x)
     k = 0.05
@@ -34,6 +35,12 @@ class Agent:
         return self.MAXRPM  * s 
 
     return self.MAXRPM  * s * np.exp(s * k * x)/(np.exp(k *100))
+
+  #Convert the angle to -pi tp pi range
+  def pi_2_pi(self, a):
+    return (a + np.pi) % (2 * np.pi) - np.pi
+
+  
   
   def state_update(self, PWM_signal):
     '''
@@ -47,11 +54,7 @@ class Agent:
     u[0] = self.PWM_to_RPM(float(PWM_signal[0]) + np.random.normal(0,self.PWM_std[0])) + np.random.normal(0,self.Wheel_std[0])
     u[1] = self.PWM_to_RPM(float(PWM_signal[1]) + np.random.normal(0,self.PWM_std[1])) + np.random.normal(0,self.Wheel_std[1])
 
-    # if u[0] < 50:
-    #     u[0] = 0
-
-    # if u[1] < 50:
-    #     u[1] = 0
+   
     self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 100) #+ np.random.normal(0, self.PWM_std[0])
     self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 100) #+ np.random.normal(0, self.PWM_std[1])
     # v = u[0]
@@ -68,7 +71,7 @@ class Agent:
 
    
     self.S =+ self.S + (B @ Dynamixs @ u) * self.delta_t
-    #self.S[2,0] = pi_2_pi(self.S[2,0])
+    self.S[2,0] = self.pi_2_pi(self.S[2,0])
    
     return self.S
 
@@ -149,12 +152,6 @@ Main Loop for the simulation.
 inputFile will be a csv file seperated by spaces where each line will have two integers
 between 0 and 255. These will represent the 2 inputs
 """
-def pi_2_pi(angle):
-    return (angle + math.pi) % (2 * math.pi) - math.pi
-
- 
-
-
 def loop(P, robot):
     outputFile = open("output.csv", "w")
     w = P["w"]
