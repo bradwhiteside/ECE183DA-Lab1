@@ -59,7 +59,6 @@ class Agent:
 
         S = self.S + (B @ u) * self.delta_t
         self.S = + S[:, 1]
-        print(self.S)
 
         return self.S
 
@@ -144,8 +143,11 @@ between 0 and 255. These will represent the 2 inputs
 def loop(P, robot):
     outputFile = open("output.csv", "w")
 
-    xOffset = P["startingX"] - P["d"]
-    yOffset = P["startingY"] - P["w"]
+    w = P["w"]
+    d = P["d"]
+    xOffset = P["startingX"] - (w // 2)
+    yOffset = P["startingY"] - (d // 2)
+
 
     pygame.init()
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
@@ -168,20 +170,38 @@ def loop(P, robot):
             time.sleep(0.1)
 
             # get output
+            """
             output = robot.get_observation()
             outputText = str(round(output[0][0],3)) + " "
             outputText = str(round(output[0][1],3)) + " "
-            outputText = str(round(output[1]   , 3)) + " "
-            outputText = str(round(output[2][0], 3)) + " "
-            outputText = str(round(output[2][1], 3))
+            outputText = str(round(output[1]   ,3)) + " "
+            outputText = str(round(output[2][0],3)) + " "
+            outputText = str(round(output[2][1],3))
             outputFile.write(outputText)
+            """
 
             # draw
-            surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
-            surf.fill((0, 128, 255))
-            rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
             screen.fill((0, 0, 0))
-            screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
+            angle = robot.S[2] * 180 / np.pi
+            surf = pygame.Surface((w, d)).convert_alpha()
+            surf.fill((0, 128, 255))
+            rotated_surf = pygame.transform.rotate(surf, angle)
+
+            # adjust coords so the surface rotates about its center
+            # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
+            box = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -d), (0, -d)]]
+            box_rotate = [p.rotate(angle) for p in box]
+            min_box = (min(box_rotate, key=lambda p: p[0])[0], min(box_rotate, key=lambda p: p[1])[1])
+            max_box = (max(box_rotate, key=lambda p: p[0])[0], max(box_rotate, key=lambda p: p[1])[1])
+            pivot = pygame.math.Vector2(w / 2, -d / 2)
+            pivot_rotate = pivot.rotate(angle)
+            pivot_move = pivot_rotate - pivot
+            x = xOffset + robot.S[0]
+            y = yOffset + robot.S[1]
+            origin = (x + min_box[0] - pivot_move[0],
+                      y - max_box[1] + pivot_move[1])
+
+            screen.blit(rotated_surf, origin)
             pygame.display.update()
 
 def main():
