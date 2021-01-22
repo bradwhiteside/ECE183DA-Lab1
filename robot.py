@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import math
 import csv
+import yaml
 import pygame
 from pygame.locals import *
 # $ pip install pygame
@@ -128,32 +129,41 @@ Main Loop for the simulation.
 inputFile will be a csv file seperated by spaces where each line will have two integers
 between 0 and 255. These will represent the 2 inputs
 """
-def loop(screen, robot):
-  with open("controls.txt") as csvFile:
-    csvReader = csv.reader(csvFile, delimiter=' ')
+def loop(P, robot):
+    xOffset = P["startingX"] - P["d"]
+    yOffset = P["startingY"] - P["l"]
 
-    while True:
-        #detect quit
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-        #read input
-        u = next(csvReader)
-        robot.state_update(u)
+    pygame.init()
+    screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
+
+    with open("controls.csv") as csvFile:
+        csvReader = csv.reader(csvFile, delimiter=' ')
+
+        while True:
+            #detect quit
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            #read input
+            u = next(csvReader)
+            robot.state_update(u)
+
+            #draw
+            surf = pygame.Surface((P["d"], P["l"])).convert_alpha()
+            rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
+            screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
+            pygame.display.update()
 
 def main():
-    pygame.init()
-    screen = pygame.display.set_mode((500, 500))
-    pygame.draw.rect(screen, (0,128,255), pygame.Rect(250, 250, 60, 60))
-    while True:
-        #detect quit
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
+    #load parameters
+    P = {}
+    with open("parameters.yml") as pFile:
+        P = yaml.load(pFile, loader=yaml.FullLoader)
+
+    robot = Agent()
+    loop(P, robot)
 
 if __name__ == "__main__":
   main()

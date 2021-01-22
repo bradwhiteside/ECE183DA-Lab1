@@ -1,0 +1,10 @@
+roomWidth: 1000
+roomHeight: 1000
+d: 50
+w: 90
+startingX: 500
+startingY: 500
+maxrpm: 130
+lstddev: 0.03
+astddev: 8
+msttdev: 1
