@@ -13,8 +13,8 @@ class Agent:
     self.S = init_state
     self.width = w
     self.diameter = d
-    self.room_width = rw		# x-direction
-    self.room_length = rl		# y-direction
+    self.room_width = rw        # x-direction
+    self.room_length = rl       # y-direction
     self.delta_t = 0.1
     self.wl = 0
     self.wr = 0
@@ -22,8 +22,9 @@ class Agent:
     self.lidarStdDev = lstddev # = 3%
     self.accelerometerStdDev = astddev # = 8 mg-rms
     self.magnemometer = mstddev
+    self.PWM_std = [0.01, 0.01]
 
-  def state_update(self, u):
+  def state_update(self, PWM_signal):
     '''
     Moving to the next step given the input u
 
@@ -31,105 +32,96 @@ class Agent:
     '''
     d = self.diameter
     w = self.width
+    u = [0,0]
+
+
+    u[0] = k_l * (PWM_signal[0] + np.random.normal(0, self.PWM_std[0]))**2
+    u[1] = k_r *(PWM_signal[1] + np.random.normal(0, self.PWM_std[1]))**2
+
+    #Given MAXRPM in revs per min, convert to radians/s and scale input
+    self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255)
+    self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255)
 
     F = np.eye(3,3)
     B = np.array([[d/4 * np.cos(self.theta), d/4 * np.cos(self.theta)],
                  [d/4 * np.sin(self.theta), d/4 * np.sin(self.theta)],
                  [self.d/(2*self.w),        -self.d/(2*self.w)]])
 
-    #Given MAXRPM in revs per min, convert to radians/s and scale input
-    self.wl = self.MAXRPM * (np.pi/30) * (u[0]/255)
-    self.wr = self.MAXRPM * (np.pi/30) * (u[1]/255)
     return F @ self.S + B @ self.u * self.delta_t
 
 
 
   
-  def get_lidar(self):
-    x_pos = self.S[0]
-    y_pos = self.S[1]
-    theta_f = self.S[2]
-    theta_r = self.S[2] - math.pi/2
-    length = self.room_length
-    width = self.room_width
+  # def get_lidar(self):
+  #   x_pos = self.S[0]
+  #   y_pos = self.S[1]
+  #   theta_f = self.S[2]
+  #   theta_r = self.S[2] - math.pi/2
+  #   length = self.room_length
+  #   width = self.room_width
 
-    front_point = [-1,-1]
-    right_point = [-1,-1]
+  #   front_point = [-1,-1]
+  #   right_point = [-1,-1]
 
-    # front sensor find coords
-    if math.sin(theta_f) == 0:
-        front = [[0, y_pos], [width, y_pos]]
-    elif math.cos(theta_f) == 0:
-        front = [[x_pos, 0], [x_pos, length]]
-    else:
-        front = [[0, math.tan(theta_f) * (-1 * x_pos) + y_pos],
-                [width, math.tan(theta_f) * (width - x_pos) + y_pos],
-                [(-1 * y_pos) / math.tan(theta_f) + x_pos, 0],
-                [(length - y_pos)/math.tan(theta_f) + x_pos, length]]
+  #   # front sensor find coords
+  #   if math.sin(theta_f) == 0:
+  #       front = [[0, y_pos], [width, y_pos]]
+  #   elif math.cos(theta_f) == 0:
+  #       front = [[x_pos, 0], [x_pos, length]]
+  #   else:
+  #       front = [[0, math.tan(theta_f) * (-1 * x_pos) + y_pos],
+  #               [width, math.tan(theta_f) * (width - x_pos) + y_pos],
+  #               [(-1 * y_pos) / math.tan(theta_f) + x_pos, 0],
+  #               [(length - y_pos)/math.tan(theta_f) + x_pos, length]]
 
-    # front sensor find intersection
-    for coord in front:
-      if (coord[0] >= 0 and coord[0] <= width and
-          coord[1] >= 0 and coord[1] <= length and
-          ((math.sin(theta_f) * (coord[0] - x_pos)) + (math.cos(theta_f) * (coord[1] - y_pos))) >= 0):
-        front_point = coord
+  #   # front sensor find intersection
+  #   for coord in front:
+  #     if (coord[0] >= 0 and coord[0] <= width and
+  #         coord[1] >= 0 and coord[1] <= length and
+  #         ((math.sin(theta_f) * (coord[0] - x_pos)) + (math.cos(theta_f) * (coord[1] - y_pos))) >= 0):
+  #       front_point = coord
 
-    # right sensor find coords
-    if math.sin(theta_r) == 0:
-        right = [[0, y_pos], [width, y_pos]]
-    elif math.cos(theta_r) == 0:
-        right = [[x_pos, 0], [x_pos, length]]
-    else:
-        right = [[0, math.tan(theta_r) * (-1 * x_pos) + y_pos],
-                [width, math.tan(theta_r) * (width - x_pos) + y_pos],
-                [(-1 * y_pos) / math.tan(theta_r) + x_pos, 0],
-                [(length - y_pos)/math.tan(theta_r) + x_pos, length]]
+  #   # right sensor find coords
+  #   if math.sin(theta_r) == 0:
+  #       right = [[0, y_pos], [width, y_pos]]
+  #   elif math.cos(theta_r) == 0:
+  #       right = [[x_pos, 0], [x_pos, length]]
+  #   else:
+  #       right = [[0, math.tan(theta_r) * (-1 * x_pos) + y_pos],
+  #               [width, math.tan(theta_r) * (width - x_pos) + y_pos],
+  #               [(-1 * y_pos) / math.tan(theta_r) + x_pos, 0],
+  #               [(length - y_pos)/math.tan(theta_r) + x_pos, length]]
 
-    # right sensor find intersection
-    for coord in right:
-      if (coord[0] >= 0 and coord[0] <= width and
-          coord[1] >= 0 and coord[1] <= length and
-          ((math.sin(theta_r) * (coord[0] - x_pos)) + (math.cos(theta_r) * (coord[1] - y_pos))) >= 0):
-        right_point = coord
+  #   # right sensor find intersection
+  #   for coord in right:
+  #     if (coord[0] >= 0 and coord[0] <= width and
+  #         coord[1] >= 0 and coord[1] <= length and
+  #         ((math.sin(theta_r) * (coord[0] - x_pos)) + (math.cos(theta_r) * (coord[1] - y_pos))) >= 0):
+  #       right_point = coord
 
-    # get distances of coords
-    if front_point == [-1,-1] or right_point == [-1,-1]:
-      raise ValueError("lidar: intersection not found!!! \n" + str(front_point) + "\n" + str(right_point))
-    front_lidar = math.sqrt((x_pos - front_point[0])**2 + (y_pos - front_point[1])**2)
-    right_lidar = math.sqrt((x_pos - right_point[0])**2 + (y_pos - right_point[1])**2)
+  #   # get distances of coords
+  #   if front_point == [-1,-1] or right_point == [-1,-1]:
+  #     raise ValueError("lidar: intersection not found!!! \n" + str(front_point) + "\n" + str(right_point))
+  #   front_lidar = math.sqrt((x_pos - front_point[0])**2 + (y_pos - front_point[1])**2)
+  #   right_lidar = math.sqrt((x_pos - right_point[0])**2 + (y_pos - right_point[1])**2)
 
-    return [front_lidar, right_lidar]
+  #   return [front_lidar, right_lidar]
   
-  def get_IMU_velocity(self):
-    omega = ((self.wl - self.wr)/self.width)*(self.diameter/2)
-    return omega + np.random.normal(0, self.accelerometerStdDev)
+  # def get_IMU_velocity(self):
+  #   omega = ((self.wl - self.wr)/self.width)*(self.diameter/2)
+  #   return omega + np.random.normal(0, self.accelerometerStdDev)
 
-  def get_IMU_position(self):
-    return (math.cos(self.S[2]) + np.random.normal(0, self.magnetometerStdDev), \
-            math.sin(self.S[2]) + np.random.normal(0, self.magnetometerStdDev) )
+  # def get_IMU_position(self):
+  #   return (math.cos(self.S[2]) + np.random.normal(0, self.magnetometerStdDev), \
+  #           math.sin(self.S[2]) + np.random.normal(0, self.magnetometerStdDev) )
   
-  def get_observation(self, wall1, wall2):
-    #do the sensor output readings here
-    L = self.get_lidaar()
-    velocity = self.get_IMU_velocity()
-    pos = self.get_IMU_position()
-    return L, velocity, pos
+  # def get_observation(self, wall1, wall2):
+  #   #do the sensor output readings here
+  #   L = self.get_lidaar()
+  #   velocity = self.get_IMU_velocity()
+  #   pos = self.get_IMU_position()
+  #   return L, velocity, pos
 
-
-
-  
-def get_input(PWM_signal):
-    PWM_std =  np.array([0.01,0.01])
-    sinal_array_length = PWM_signal.shape[1]
-    np.random.normal(0, PWM_std[0], sinal_array_length)
-    k_l = 1
-    k_r = 1
-    
-    w_l = k_l * (PWM_signal [0,:] + np.random.normal(0, PWM_std[0], sinal_array_length))**2
-    w_r = k_r *(PWM_signal[1,:] + np.random.normal(0, PWM_std[1], sinal_array_length))**2
-    
-    u = np.vstack((w_l, w_r))
-    return u
 
   
 """
@@ -149,7 +141,9 @@ def loop(screen, robot):
                 pygame.quit()
                 sys.exit()
         #read input
+
         u = next(csvReader)
+
         robot.state_update(u)
 
 def main():
