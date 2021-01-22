@@ -8,7 +8,7 @@ from pygame.locals import *
 # https://coderslegacy.com/python/python-pygame-tutorial/
 
 class Agent:
-  def __init__(self, init_state = [0,0,0], w, d, rw, rl, maxrpm, lstddev, astddev, mstddev): 
+  def __init__(self, init_state = [0,0,0], w =90, d=50, rw=10000, rl=10000, maxrpm = 130, lstddev = 0.03, astddev = 8, mstddev =1):  
     self.S = init_state
     self.width = w
     self.diameter = d
