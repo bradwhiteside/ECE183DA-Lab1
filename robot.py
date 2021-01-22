@@ -4,6 +4,7 @@ import math
 import csv
 import pygame
 from pygame.locals import *
+import yaml
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
@@ -30,7 +31,7 @@ class Agent:
 
     return : s
     '''
-<<<<<<< Updated upstream
+
     u = [0,0]
     k_l = 1
     k_r = 1
@@ -57,7 +58,7 @@ class Agent:
                  [self.diameter/(2*self.width),        -self.diameter/(2*self.width)]])
 
     return F @ self.S + B @ self.u * self.delta_t
-=======
+
    
 
     u = [0,0]
@@ -92,7 +93,6 @@ class Agent:
 
     u = np.vstack((self.wl, self.wr))
     return F @ self.S + B @ u * self.delta_t
->>>>>>> Stashed changes
 
 
 
@@ -174,18 +174,18 @@ Main Loop for the simulation.
 inputFile will be a csv file seperated by spaces where each line will have two integers
 between 0 and 255. These will represent the 2 inputs
 """
-<<<<<<< Updated upstream
+
 def loop(screen, robot):
   with open("controls.txt") as csvFile:
     csvReader = csv.reader(csvFile, delimiter=' ')
-=======
+
 def loop(P, robot):
     xOffset = P["startingX"] - P["d"]
     yOffset = P["startingY"] - P["w"]
 
     pygame.init()
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
->>>>>>> Stashed changes
+
 
     while True:
         #detect quit
@@ -198,7 +198,7 @@ def loop(P, robot):
 
         u = next(csvReader)
 
-<<<<<<< Updated upstream
+
         robot.state_update(u)
 
 def main():
@@ -212,7 +212,7 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-=======
+
             #read input
             u = next(csvReader)
             print(u)
@@ -232,7 +232,7 @@ def main():
 
     robot = Agent()
     loop(P, robot)
->>>>>>> Stashed changes
+
 
 if __name__ == "__main__":
   main()
