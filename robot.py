@@ -6,6 +6,8 @@ import yaml
 import pygame
 from pygame.locals import *
 import time
+import yaml
+
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
@@ -39,6 +41,7 @@ class Agent:
     Moving to the next step given the input u
     return : s
     '''
+
     u = [0, 0]
     k_l = 1
     k_r = 1
@@ -46,11 +49,7 @@ class Agent:
     u[0] = self.PWM_to_RPM(float(PWM_signal[0]))
     u[1] = self.PWM_to_RPM(float(PWM_signal[1]))
 
-    # if u[0] < 50:
-    #     u[0] = 0
 
-    # if u[1] < 50:
-    #     u[1] = 0
     self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 100) #+ np.random.normal(0, self.PWM_std[0])
     self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 100) #+ np.random.normal(0, self.PWM_std[1])
     # v = u[0]
@@ -143,11 +142,12 @@ class Agent:
     return L, velocity, pos
   
   
-"""
+'''
 Main Loop for the simulation.
 inputFile will be a csv file seperated by spaces where each line will have two integers
 between 0 and 255. These will represent the 2 inputs
-"""
+'''
+
 def pi_2_pi(angle):
     return (angle + math.pi) % (2 * math.pi) - math.pi
 
@@ -239,6 +239,27 @@ def main():
 
     robot = Agent()
     loop(P, robot)
+
+            #read input
+            u = next(csvReader)
+            print(u)
+            robot.state_update(u)
+
+            #draw
+            surf = pygame.Surface((P["d"], P["w"])).convert_alpha()
+            rotated_surf = pygame.transform.rotate(surf, robot.S[2] * 180 / np.pi)
+            screen.blit(rotated_surf, (xOffset + robot.S[0], yOffset + robot.S[1]))
+            pygame.display.update()
+
+def main():
+    #load parameters
+    P = {}
+    with open("parameters.yml") as pFile:
+        P = yaml.load(pFile, Loader=yaml.FullLoader)
+
+    robot = Agent()
+    loop(P, robot)
+
 
 if __name__ == "__main__":
   main()
