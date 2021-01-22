@@ -164,6 +164,7 @@ def loop(P, robot):
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
     font = pygame.font.Font('freesansbold.ttf', 32)
 
+    time.sleep(10)
     with open("controls.csv") as csvFile:
         csvReader = csv.reader(csvFile, delimiter=' ')
 
@@ -225,7 +226,7 @@ def blitRotate(surf, image, pos, originPos, angle):
     rotated_image = pygame.transform.rotate(image, angle)
 
     # rotate and blit the image
-    surf.blit(rotated_image, origin)
+    surf.blit(rotated_image, (origin[0][0], origin[1][0]))
 
 
 def main():
