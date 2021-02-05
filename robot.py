@@ -69,15 +69,18 @@ def loop(robot, init_state):
             # pygame.display.update()
 
         print("State ls is: ", states.shape)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
         plt.plot(states[:, 0], states[:, 1])
         plt.xlabel('x mm')
         plt.ylabel('y mm')
         plt.title("Segway3_Simulation")
         plt.grid()
+        ax.set_aspect('equal', adjustable='box')
         plt.show()
         print("ploted")
 
-        #convert radians to degrees
+        # convert radians to degrees
         states[:, 2] = np.degrees(states[:, 2])
         np.savetxt(OUTPUT_FILE, states, delimiter=',', fmt='%.4f')
 
