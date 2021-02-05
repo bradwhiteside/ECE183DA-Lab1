@@ -6,6 +6,7 @@ w: 90
 startingX: 500
 startingY: 500
 startingAngle: 90
+# in degress ^
 maxrpm: 130
 lstddev: 0.03
 astddev: 0.008

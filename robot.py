@@ -9,8 +9,8 @@ from pygame.locals import *
 import time
 from mini_bot import Agent
 
-INPUT_FILE = "Inputs/Segway3.csv"
-PARAMETER_FILE = "SegwayParameters.yml"
+INPUT_FILE = "Inputs/Paperbot3.csv"
+PARAMETER_FILE = "PaperbotParameters.yml"
 OUTPUT_FILE = "output.csv"
 
 
@@ -76,6 +76,10 @@ def loop(robot, init_state):
         plt.grid()
         plt.show()
         print("ploted")
+
+        #convert radians to degrees
+        states[:, 2] = np.degrees(states[:, 2])
+        np.savetxt(OUTPUT_FILE, states, delimiter=',', fmt='%.4f')
 
 # adjust coords so the surface rotates about its center
 # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
