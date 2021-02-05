@@ -1,18 +1,19 @@
 import numpy as np
 import math
 class Agent:
-    def __init__(self, init_state, w, l, d, rw, rl, maxrpm, lstddev, astddev,
-                 mstddev):
+
+    def __init__(self, init_state=[0, 0, 0], w=530, d=502, rw=10000, rl=10000, maxrpm=130, lstddev=0.03, astddev=8,
+                 mstddev=1):
         self.S = np.reshape(np.array(init_state), (3, 1))
+        print(self.S)
         self.width = w
-        self.length = l
         self.diameter = d
         self.room_width = rw  # x-direction
         self.room_length = rl  # y-direction
-        self.delta_t = 0.1
+        self.delta_t = 0.01
         self.wl = 0
         self.wr = 0
-        self.MAXRPM = maxrpm
+        self.MAXRPM = 1/6
         self.lidarStdDev = lstddev  # = 3%
         self.accelerometerStdDev = astddev  # = 8 mg-rms
         self.magnetometerStdDev = mstddev
@@ -20,7 +21,7 @@ class Agent:
         self.Wheel_std = [0, 0]
 
     def PWM_to_RPM(self, x):
-        return x/6
+
         s = np.sign(x)
         k = 0.05
         if (np.abs(x) > 100):
@@ -28,9 +29,14 @@ class Agent:
 
         return self.MAXRPM * s * np.exp(s * k * x) / (np.exp(k * 100))
 
+    def DPS_RadS(self, x):
+
+        return x * np.pi/180
+
     #Convert the angle to -pi tp pi range
     def pi_2_pi(self, a):
         return (a + np.pi) % (2 * np.pi) - np.pi
+    
 
     def state_update(self, PWM_signal):
         '''
@@ -41,19 +47,18 @@ class Agent:
         k_l = 1
         k_r = 1
 
-        u[0] = self.PWM_to_RPM(float(PWM_signal[0]) + np.random.normal(0,self.PWM_std[0])) + np.random.normal(0,self.Wheel_std[0])
-        u[1] = self.PWM_to_RPM(float(PWM_signal[1]) + np.random.normal(0,self.PWM_std[1])) + np.random.normal(0,self.Wheel_std[1])
+        # u[0] = self.PWM_to_RPM(float(PWM_signal[0]) + np.random.normal(0,self.PWM_std[0])) + np.random.normal(0,self.Wheel_std[0])
+        # u[1] = self.PWM_to_RPM(float(PWM_signal[1]) + np.random.normal(0,self.PWM_std[1])) + np.random.normal(0,self.Wheel_std[1])
+        self.wl = self.DPS_RadS(float(PWM_signal[0])) +  np.random.normal(0,self.Wheel_std[0])
+        self.wr = self.DPS_RadS(float(PWM_signal[1])) + np.random.normal(0,self.Wheel_std[1])
 
-        # if u[0] < 50:
-        #     u[0] = 0
 
-        # if u[1] < 50:
-        #     u[1] = 0
-        self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 100)  # + np.random.normal(0, self.PWM_std[0])
-        self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 100)  # + np.random.normal(0, self.PWM_std[1])
+        # self.wl = self.MAXRPM * (np.pi / 30) * (u[0] / 100)  # + np.random.normal(0, self.PWM_std[0])
+        # self.wr = self.MAXRPM * (np.pi / 30) * (u[1] / 100)  # + np.random.normal(0, self.PWM_std[1])
         # v = u[0]
         # ommega = u[1]
         u = np.vstack((self.wl, self.wr))
+        print("u is:", u)
 
         B = np.array([[np.cos(self.S[2, 0]), 0],
                       [np.sin(self.S[2, 0]), 0],

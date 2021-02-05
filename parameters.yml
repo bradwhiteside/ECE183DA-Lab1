@@ -1,0 +1,15 @@
+roomWidth: 1000
+roomHeight: 1000
+l: 75
+w: 90
+
+
+init_state: [5000, 5000, 90]
+
+
+startingX: 500
+startingY: 500
+maxrpm: 130
+lstddev: 0.03
+astddev: 0.008
+msttdev: 1

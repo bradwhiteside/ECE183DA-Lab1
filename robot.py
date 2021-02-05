@@ -17,18 +17,17 @@ OUTPUT_FILE = "output.csv"
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
-def loop(robot, init_state):
-    outputFile = open(OUTPUT_FILE, "w")
-    w = robot.width
-    l = robot.length
-    xOffset = robot.S[0] - (l // 2)
-    yOffset = robot.S[1] - (w // 2)
+def loop(P, robot, init_state):
+    outputFile = open("output.csv", "w")
+    w = P["w"]
+    l = P["l"]
+    xOffset = P["startingX"] - (l // 2)
+    yOffset = P["startingY"] - (w // 2)
 
     states = list()
-    pygame.init()
-    screen = pygame.display.set_mode((robot.room_width, robot.room_length))
-
-    with open(INPUT_FILE) as csvFile:
+    # pygame.init()
+    # screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
+    with open("Inputs/Segway3.csv") as csvFile:
         csvReader = csv.reader(csvFile, delimiter=',')
         inputs = list(csvReader)
         STATE_SIZE = 3
@@ -37,16 +36,16 @@ def loop(robot, init_state):
 
         for i in range(len(inputs)):
             # detect quit
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    outputFile.close()
-                    pygame.quit()
-                    sys.exit()
-
+            # for event in pygame.event.get():
+            #     if event.type == QUIT:
+            #         outputFile.close()
+            #         pygame.quit()
+            #         sys.exit()
+            print(inputs[i])
             robot.state_update(inputs[i])
             states[i, :] = robot.S.T
 
-            time.sleep(0.01)
+            #time.sleep(0.1)
             # print(state)
 
             # get output
@@ -60,23 +59,23 @@ def loop(robot, init_state):
             # print(outputText)
 
             # draw
-            screen.fill((0, 0, 0))
-            angle = robot.S[2] * 180 / np.pi
-            surf = pygame.Surface((l, w)).convert_alpha()
-            surf.fill((0, 128, 255))
-            x = xOffset + robot.S[0]
-            y = yOffset + robot.S[1]
-            blitRotate(screen, surf, (x, y), (l // 2, w // 2), -angle)
-            pygame.display.update()
+            # screen.fill((0, 0, 0))
+            # angle = robot.S[2] * 180 / np.pi
+            # surf = pygame.Surface((l, w)).convert_alpha()
+            # surf.fill((0, 128, 255))
+            # x = xOffset + robot.S[0]
+            # y = yOffset + robot.S[1]
+            # blitRotate(screen, surf, (x, y), (l // 2, w // 2), -angle)
+            # pygame.display.update()
 
         print("State ls is: ", states.shape)
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.plot(states[:, 1], states[:, 0])
-        ax.set_aspect('equal', adjustable='box')
+        plt.plot(states[:, 0], states[:, 1])
+        plt.xlabel('x mm')
+        plt.ylabel('y mm')
+        plt.title("Segway3_Simulation")
+        plt.grid()
         plt.show()
         print("ploted")
-
 
 # adjust coords so the surface rotates about its center
 # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
@@ -114,10 +113,15 @@ def main():
     with open(PARAMETER_FILE) as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    init_state = [P["startingX"], P["startingY"], P['startingAngle']]
-    robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
-                  P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
-    loop(robot, init_state)
+    # init_state = [P["startingX"], P["startingY"], P['startingAngle']]
+    # robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
+    #               P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
+    # loop(robot, init_state)
+
+    init_state = [5000, 5000, np.pi/2]
+
+    robot = Agent(init_state=init_state)
+    loop(P, robot, init_state)
 
 
 if __name__ == "__main__":
