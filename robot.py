@@ -10,7 +10,7 @@ import time
 from mini_bot import Agent
 
 INPUT_FILE = "Inputs/Segway3.csv"
-PARAMETER_FILE = "parameters.yml"
+PARAMETER_FILE = "SegwayParameters.yml"
 OUTPUT_FILE = "output.csv"
 
 
@@ -46,7 +46,7 @@ def loop(robot, init_state):
             robot.state_update(inputs[i])
             states[i, :] = robot.S.T
 
-            time.sleep(0.1)
+            time.sleep(0.01)
             # print(state)
 
             # get output
@@ -114,7 +114,7 @@ def main():
     with open(PARAMETER_FILE) as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    init_state = [P["startingX"], P["startingY"], 0]
+    init_state = [P["startingX"], P["startingY"], P['startingAngle']]
     robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
                   P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
     loop(robot, init_state)
