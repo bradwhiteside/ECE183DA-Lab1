@@ -1,0 +1,12 @@
+roomWidth: 10000
+roomHeight: 10000
+d: 502
+l: 682
+w: 530
+startingX: 5000
+startingY: 5000
+startingAngle: 90
+maxrpm: 130
+lstddev: 0.03
+astddev: 0.008
+mstddev: 1
