@@ -9,6 +9,7 @@ from pygame.locals import *
 import time
 from mini_bot import Agent
 
+
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
@@ -19,35 +20,31 @@ def loop(P, robot, init_state):
     xOffset = P["startingX"] - (l // 2)
     yOffset = P["startingY"] - (w // 2)
 
-
     states = list()
-    pygame.init()
-    screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
-    font = pygame.font.Font('freesansbold.ttf', 32)
-
-    time.sleep(10)
-    with open("controls.csv") as csvFile:
-        csvReader = csv.reader(csvFile, delimiter=' ')
+    # pygame.init()
+    # screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
+ 
+    with open("Inputs/Segway3.csv") as csvFile:
+        csvReader = csv.reader(csvFile, delimiter=',')
         inputs = list(csvReader)
         STATE_SIZE = 3
 
-        states = np.zeros((len(inputs),STATE_SIZE))
+        states = np.zeros((len(inputs), STATE_SIZE))
 
         for i in range(len(inputs)):
             # detect quit
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    outputFile.close()
-                    pygame.quit()
-                    sys.exit()
-
-  
+            # for event in pygame.event.get():
+            #     if event.type == QUIT:
+            #         outputFile.close()
+            #         pygame.quit()
+            #         sys.exit()
+            print(inputs[i])
             robot.state_update(inputs[i])
-            states[i,:] = robot.S.T
-        
-            time.sleep(0.1)
-            #print(state)
-            
+            states[i, :] = robot.S.T
+
+            #time.sleep(0.1)
+            # print(state)
+
             # get output
             # output = robot.get_observation()
             # outputText = str(round(output[0][0], 3))[:-1] + " "
@@ -59,22 +56,23 @@ def loop(P, robot, init_state):
             # print(outputText)
 
             # draw
-            screen.fill((0, 0, 0))
-            angle = robot.S[2] * 180 / np.pi
-            surf = pygame.Surface((l, w)).convert_alpha()
-            surf.fill((0, 128, 255))
-            x = xOffset + robot.S[0]
-            y = yOffset + robot.S[1]
-            blitRotate(screen, surf, (x, y), (l // 2, w // 2), -angle)
-            pygame.display.update()
-
+            # screen.fill((0, 0, 0))
+            # angle = robot.S[2] * 180 / np.pi
+            # surf = pygame.Surface((l, w)).convert_alpha()
+            # surf.fill((0, 128, 255))
+            # x = xOffset + robot.S[0]
+            # y = yOffset + robot.S[1]
+            # blitRotate(screen, surf, (x, y), (l // 2, w // 2), -angle)
+            # pygame.display.update()
 
         print("State ls is: ", states.shape)
-        plt.plot(states[:,0], states[:,1])
+        plt.plot(states[:, 0], states[:, 1])
+        plt.xlabel('x mm')
+        plt.ylabel('y mm')
+        plt.title("Segway3_Simulation")
+        plt.grid()
         plt.show()
         print("ploted")
-
-
 
 
 # adjust coords so the surface rotates about its center
@@ -102,7 +100,6 @@ def blitRotate(surf, image, pos, originPos, angle):
     surf.blit(rotated_image, (origin[0][0], origin[1][0]))
 
 
-
 def main():
     """
     Main Loop for the simulation.
@@ -114,8 +111,9 @@ def main():
     with open("parameters.yml") as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    init_state = [0,0,0]
-    robot = Agent(init_state = init_state)
+    init_state = [500, 500, np.pi/2]
+
+    robot = Agent(init_state=init_state)
     loop(P, robot, init_state)
 
 
