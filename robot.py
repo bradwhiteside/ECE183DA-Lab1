@@ -9,7 +9,7 @@ from pygame.locals import *
 import time
 from mini_bot import Agent
 
-INPUT_FILE = "Inputs/Paperbot3.csv"
+INPUT_FILE = "Inputs/Paperbot1.csv"
 PARAMETER_FILE = "PaperbotParameters.yml"
 OUTPUT_FILE = "output.csv"
 
@@ -23,6 +23,7 @@ def loop(robot, init_state):
     l = robot.length
     xOffset = robot.S[0] - (l // 2)
     yOffset = robot.S[1] - (w // 2)
+    START = (robot.S[0], robot.S[1], robot.S[2])
 
     states = list()
     # pygame.init()
@@ -32,7 +33,12 @@ def loop(robot, init_state):
         inputs = list(csvReader)
         STATE_SIZE = 3
 
+        time = np.linspace(0, 5, num=501)
         states = np.zeros((len(inputs), STATE_SIZE))
+        displacement = np.zeros((len(inputs), 2))
+        angular_displacement = np.zeros((len(inputs), 1))
+        angular_velocity = np.zeros((len(inputs), 1))
+        wheel_angular_velocity = np.zeros((len(inputs), 2))
 
         for i in range(len(inputs)):
             # detect quit
@@ -44,6 +50,10 @@ def loop(robot, init_state):
             print(inputs[i])
             robot.state_update(inputs[i])
             states[i, :] = robot.S.T
+            displacement[i, :] = np.array((robot.S[0] - START[0], robot.S[1] - START[1])).T
+            angular_displacement[i, :] = robot.S[2] - START[2]
+            angular_velocity[i, :] = robot.get_IMU_velocity()
+            wheel_angular_velocity[i, :] = np.array((robot.wl, robot.wr)).T
 
             #time.sleep(0.1)
             # print(state)
@@ -74,15 +84,50 @@ def loop(robot, init_state):
         plt.plot(states[:, 0], states[:, 1])
         plt.xlabel('x mm')
         plt.ylabel('y mm')
-        plt.title("Segway3_Simulation")
+        plt.title(INPUT_FILE[7:-4] + "_Simulation")
         plt.grid()
         ax.set_aspect('equal', adjustable='box')
-        plt.show()
+        #plt.show()
         print("ploted")
+
+        fig, axs = plt.subplots(2, 2)
+        axs[0, 0].plot(time, displacement[:, 0], label="x")
+        axs[0, 0].plot(time, displacement[:, 1], label="y")
+        axs[0, 0].set_xlabel('mm')
+        axs[0, 0].set_ylabel('time')
+        axs[0, 0].set_title(INPUT_FILE[7:-4] + "_Displacement")
+        axs[0, 0].grid()
+
+        axs[0, 1].plot(time, angular_displacement)
+        axs[0, 1].set_xlabel('degrees')
+        axs[0, 1].set_ylabel('time')
+        axs[0, 1].set_title(INPUT_FILE[7:-4] + "_Angular_Displacement")
+        axs[0, 1].grid()
+
+        axs[1, 0].plot(time, angular_velocity)
+        axs[1, 0].set_xlabel('degrees/sec')
+        axs[1, 0].set_ylabel('time')
+        axs[1, 0].set_title(INPUT_FILE[7:-4] + "_Angular_Velocity")
+        axs[1, 0].grid()
+
+        axs[1, 1].plot(time, wheel_angular_velocity[:, 0], label="left")
+        axs[1, 1].plot(time, wheel_angular_velocity[:, 1], label="right")
+        axs[1, 1].set_xlabel('degrees/sec')
+        axs[1, 1].set_ylabel('time')
+        axs[1, 1].set_title(INPUT_FILE[7:-4] + "_Wheel_Angular_Displacement")
+        axs[1, 1].grid()
+
+        plt.show()
 
         # convert radians to degrees
         states[:, 2] = np.degrees(states[:, 2])
-        np.savetxt(OUTPUT_FILE, states, delimiter=',', fmt='%.4f')
+        output_matrix = states
+        output_matrix = np.column_stack((output_matrix, displacement))
+        output_matrix = np.column_stack((output_matrix, angular_displacement))
+        output_matrix = np.column_stack((output_matrix, angular_velocity))
+        output_matrix = np.column_stack((output_matrix, wheel_angular_velocity))
+        np.savetxt(OUTPUT_FILE, output_matrix, delimiter=',', fmt='%.4f')
+        # x, y, theta, x_disp, y_disp, theta_disp, omega, left_wheel_omega, right_wheel_omega
 
 # adjust coords so the surface rotates about its center
 # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame

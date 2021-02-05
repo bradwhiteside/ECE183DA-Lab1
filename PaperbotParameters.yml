@@ -8,6 +8,6 @@ startingY: 500
 startingAngle: 90
 # in degress ^
 maxrpm: 130
-lstddev: 0.03
-astddev: 0.008
-mstddev: 1
+lstddev: 0
+astddev: 0
+mstddev: 0
