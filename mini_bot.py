@@ -2,18 +2,19 @@ import numpy as np
 import math
 class Agent:
 
-    def __init__(self, init_state=[0, 0, 0], w=530, d=502, rw=10000, rl=10000, maxrpm=130, lstddev=0.03, astddev=8,
+    def __init__(self, init_state=[0, 0, 0], w=530, l=682, d=502, rw=10000, rl=10000, maxrpm=130, lstddev=0.03, astddev=8,
                  mstddev=1):
         self.S = np.reshape(np.array(init_state), (3, 1))
         print(self.S)
         self.width = w
+        self.length = l
         self.diameter = d
         self.room_width = rw  # x-direction
         self.room_length = rl  # y-direction
         self.delta_t = 0.01
         self.wl = 0
         self.wr = 0
-        self.MAXRPM = 1/6
+        self.MAXRPM = maxrpm
         self.lidarStdDev = lstddev  # = 3%
         self.accelerometerStdDev = astddev  # = 8 mg-rms
         self.magnetometerStdDev = mstddev

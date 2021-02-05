@@ -17,17 +17,17 @@ OUTPUT_FILE = "output.csv"
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
-def loop(P, robot, init_state):
+def loop(robot, init_state):
     outputFile = open("output.csv", "w")
-    w = P["w"]
-    l = P["l"]
-    xOffset = P["startingX"] - (l // 2)
-    yOffset = P["startingY"] - (w // 2)
+    w = robot.width
+    l = robot.length
+    xOffset = robot.S[0] - (l // 2)
+    yOffset = robot.S[1] - (w // 2)
 
     states = list()
     # pygame.init()
     # screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
-    with open("Inputs/Segway3.csv") as csvFile:
+    with open(INPUT_FILE) as csvFile:
         csvReader = csv.reader(csvFile, delimiter=',')
         inputs = list(csvReader)
         STATE_SIZE = 3
@@ -113,15 +113,15 @@ def main():
     with open(PARAMETER_FILE) as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    # init_state = [P["startingX"], P["startingY"], P['startingAngle']]
-    # robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
-    #               P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
-    # loop(robot, init_state)
+    init_state = [P["startingX"], P["startingY"], np.radians(P['startingAngle'])]
+    robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
+                  P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
+    loop(robot, init_state)
 
-    init_state = [5000, 5000, np.pi/2]
+    #init_state = [5000, 5000, np.pi/2]
 
-    robot = Agent(init_state=init_state)
-    loop(P, robot, init_state)
+    #robot = Agent(init_state=init_state)
+    #loop(P, robot, init_state)
 
 
 if __name__ == "__main__":
