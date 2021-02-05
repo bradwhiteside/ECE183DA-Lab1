@@ -9,25 +9,27 @@ from pygame.locals import *
 import time
 from mini_bot import Agent
 
+INPUT_FILE = "Inputs/Segway3.csv"
+PARAMETER_FILE = "parameters.yml"
+OUTPUT_FILE = "output.csv"
+
 
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
-def loop(P, robot, init_state):
-    outputFile = open("output.csv", "w")
-    w = P["w"]
-    l = P["l"]
-    xOffset = P["startingX"] - (l // 2)
-    yOffset = P["startingY"] - (w // 2)
+def loop(robot, init_state):
+    outputFile = open(OUTPUT_FILE, "w")
+    w = robot.width
+    l = robot.length
+    xOffset = robot.S[0] - (l // 2)
+    yOffset = robot.S[1] - (w // 2)
 
     states = list()
     pygame.init()
-    screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
-    font = pygame.font.Font('freesansbold.ttf', 32)
+    screen = pygame.display.set_mode((robot.room_width, robot.room_length))
 
-    time.sleep(10)
-    with open("controls.csv") as csvFile:
-        csvReader = csv.reader(csvFile, delimiter=' ')
+    with open(INPUT_FILE) as csvFile:
+        csvReader = csv.reader(csvFile, delimiter=',')
         inputs = list(csvReader)
         STATE_SIZE = 3
 
@@ -68,7 +70,10 @@ def loop(P, robot, init_state):
             pygame.display.update()
 
         print("State ls is: ", states.shape)
-        plt.plot(states[:, 0], states[:, 1])
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.plot(states[:, 1], states[:, 0])
+        ax.set_aspect('equal', adjustable='box')
         plt.show()
         print("ploted")
 
@@ -106,12 +111,13 @@ def main():
     """
     # load parameters
     P = {}
-    with open("parameters.yml") as pFile:
+    with open(PARAMETER_FILE) as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    init_state = [0, 0, 0]
-    robot = Agent(init_state=init_state)
-    loop(P, robot, init_state)
+    init_state = [P["startingX"], P["startingY"], 0]
+    robot = Agent(init_state, P['w'], P['l'], P['d'], P['roomWidth'], P['roomHeight'],
+                  P['maxrpm'], P['lstddev'], P['astddev'], P['mstddev'])
+    loop(robot, init_state)
 
 
 if __name__ == "__main__":

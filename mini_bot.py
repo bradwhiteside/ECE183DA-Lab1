@@ -1,10 +1,11 @@
 import numpy as np
 import math
 class Agent:
-    def __init__(self, init_state=[0, 0, 0], w=90, d=50, rw=10000, rl=10000, maxrpm=130, lstddev=0.03, astddev=8,
-                 mstddev=1):
+    def __init__(self, init_state, w, l, d, rw, rl, maxrpm, lstddev, astddev,
+                 mstddev):
         self.S = np.reshape(np.array(init_state), (3, 1))
         self.width = w
+        self.length = l
         self.diameter = d
         self.room_width = rw  # x-direction
         self.room_length = rl  # y-direction
@@ -19,6 +20,7 @@ class Agent:
         self.Wheel_std = [0, 0]
 
     def PWM_to_RPM(self, x):
+        return x/6
         s = np.sign(x)
         k = 0.05
         if (np.abs(x) > 100):
