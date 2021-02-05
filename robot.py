@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 import math
 import csv
 import yaml
@@ -7,16 +8,19 @@ import pygame
 from pygame.locals import *
 import time
 from mini_bot import Agent
+
+
 # $ pip install pygame
 # code for pygame taken from this tutorial:
 # https://coderslegacy.com/python/python-pygame-tutorial/
-def loop(P, robot):
+def loop(P, robot, init_state):
     outputFile = open("output.csv", "w")
     w = P["w"]
     l = P["l"]
     xOffset = P["startingX"] - (l // 2)
     yOffset = P["startingY"] - (w // 2)
 
+    states = list()
     pygame.init()
     screen = pygame.display.set_mode((P["roomWidth"], P["roomHeight"]))
     font = pygame.font.Font('freesansbold.ttf', 32)
@@ -24,8 +28,12 @@ def loop(P, robot):
     time.sleep(10)
     with open("controls.csv") as csvFile:
         csvReader = csv.reader(csvFile, delimiter=' ')
+        inputs = list(csvReader)
+        STATE_SIZE = 3
 
-        while True:
+        states = np.zeros((len(inputs), STATE_SIZE))
+
+        for i in range(len(inputs)):
             # detect quit
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -33,21 +41,21 @@ def loop(P, robot):
                     pygame.quit()
                     sys.exit()
 
-            # read input
-            u = next(csvReader)
-            robot.state_update(u)
+            robot.state_update(inputs[i])
+            states[i, :] = robot.S.T
+
             time.sleep(0.1)
+            # print(state)
 
             # get output
-
-            output = robot.get_observation()
-            outputText = str(round(output[0][0], 3))[:-1] + " "
-            outputText += str(round(output[0][1], 3))[:-1] + " "
-            outputText += str(round(output[1], 3))[:-1] + " "
-            outputText += str(round(output[2][0], 3))[:-1] + " "
-            outputText += str(round(output[2][1], 3)) + "\n"
-            outputFile.write(outputText)
-            print(outputText)
+            # output = robot.get_observation()
+            # outputText = str(round(output[0][0], 3))[:-1] + " "
+            # outputText += str(round(output[0][1], 3))[:-1] + " "
+            # outputText += str(round(output[1], 3))[:-1] + " "
+            # outputText += str(round(output[2][0], 3))[:-1] + " "
+            # outputText += str(round(output[2][1], 3)) + "\n"
+            # outputFile.write(outputText)
+            # print(outputText)
 
             # draw
             screen.fill((0, 0, 0))
@@ -57,8 +65,12 @@ def loop(P, robot):
             x = xOffset + robot.S[0]
             y = yOffset + robot.S[1]
             blitRotate(screen, surf, (x, y), (l // 2, w // 2), -angle)
-
             pygame.display.update()
+
+        print("State ls is: ", states.shape)
+        plt.plot(states[:, 0], states[:, 1])
+        plt.show()
+        print("ploted")
 
 
 # adjust coords so the surface rotates about its center
@@ -86,7 +98,6 @@ def blitRotate(surf, image, pos, originPos, angle):
     surf.blit(rotated_image, (origin[0][0], origin[1][0]))
 
 
-
 def main():
     """
     Main Loop for the simulation.
@@ -98,8 +109,9 @@ def main():
     with open("parameters.yml") as pFile:
         P = yaml.load(pFile, Loader=yaml.FullLoader)
 
-    robot = Agent()
-    loop(P, robot)
+    init_state = [0, 0, 0]
+    robot = Agent(init_state=init_state)
+    loop(P, robot, init_state)
 
 
 if __name__ == "__main__":
